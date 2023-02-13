@@ -1,13 +1,21 @@
-// ignore_for_file: prefer_const_constructors_in_immutables
+// ignore_for_file: prefer_const_constructors_in_immutables, avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import '../../../../core/color_manager.dart';
 
+import '../../../../core/utils/color_manager.dart';
+import '../../../../core/utils/components_manager.dart';
+import '../../../../core/utils/routes_manager.dart';
+import '../cubit/phone_auth_cubit.dart';
+import '../cubit/phone_auth_states.dart';
+
+// ignore: must_be_immutable
 class OtpView extends StatelessWidget {
-  OtpView({super.key});
+  final  phoneNumber;
+  late String otpCode;
+  OtpView({super.key, required this.phoneNumber});
 
-  late final _phoneNumber;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -16,15 +24,16 @@ class OtpView extends StatelessWidget {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              buildIntroOtpTexts(),
+              _buildIntroOtpTexts(),
               const SizedBox(
                 height: 90.0,
               ),
-              buildPinCodeFields(context),
+              _buildPinCodeFields(context),
               SizedBox(
                 height: MediaQuery.of(context).size.height / 20,
               ),
-              buildVerifyButton(),
+              _buildVerifyButton(context),
+              _buildPhoneNumberVerifiedBloc(),
             ],
           ),
         ),
@@ -32,7 +41,7 @@ class OtpView extends StatelessWidget {
     );
   }
 
-  Widget buildIntroOtpTexts() {
+  Widget _buildIntroOtpTexts() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 55.0),
       child: Column(
@@ -51,7 +60,7 @@ class OtpView extends StatelessWidget {
           ),
           RichText(
             text: TextSpan(
-                text: 'Enter your 6 digits code numbers sent to',
+                text: 'Enter your 6 digits code numbers sent to ',
                 style: const TextStyle(
                   color: Colors.black,
                   fontSize: 18.0,
@@ -59,7 +68,7 @@ class OtpView extends StatelessWidget {
                 ),
                 children: <TextSpan>[
                   TextSpan(
-                    text: _phoneNumber,
+                    text: phoneNumber,
                     style: const TextStyle(
                       color: ColorManager.blue,
                     ),
@@ -71,7 +80,7 @@ class OtpView extends StatelessWidget {
     );
   }
 
-  Widget buildPinCodeFields(BuildContext context) {
+  Widget _buildPinCodeFields(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: PinCodeTextField(
@@ -97,7 +106,8 @@ class OtpView extends StatelessWidget {
         animationDuration: const Duration(milliseconds: 300),
         backgroundColor: Colors.white,
         enableActiveFill: true,
-        onCompleted: (v) {
+        onCompleted: (code) {
+          otpCode = code;
           print("Completed");
         },
         onChanged: (value) {
@@ -107,7 +117,11 @@ class OtpView extends StatelessWidget {
     );
   }
 
-  Widget buildVerifyButton() {
+  void _login(BuildContext context) {
+    BlocProvider.of<PhoneAuthCubit>(context).submitOTP(otpCode);
+  }
+
+  Widget _buildVerifyButton(BuildContext context) {
     return Align(
       alignment: Alignment.centerRight,
       child: Padding(
@@ -116,9 +130,8 @@ class OtpView extends StatelessWidget {
         ),
         child: ElevatedButton(
           onPressed: () {
-            // if (PhoneAuthCubit.get(context).formKey.currentState!.validate()) {
-              
-            // }
+            showProgressIndicator(context);
+            _login(context);
           },
           style: ElevatedButton.styleFrom(
               minimumSize: const Size(110, 50),
@@ -126,7 +139,7 @@ class OtpView extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6.0))),
           child: const Text(
-            'Verify', 
+            'Verify',
             style: TextStyle(
               fontSize: 16.0,
               color: Colors.white,
@@ -134,6 +147,39 @@ class OtpView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPhoneNumberVerifiedBloc() {
+    return BlocListener<PhoneAuthCubit, PhoneAuthStates>(
+      listenWhen: (previous, current) {
+        return previous != current;
+      },
+      listener: (BuildContext context, state) {
+        if (state is LoadingState) {
+          showProgressIndicator(context);
+        }
+        if (state is PhoneOTPVerified) {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushReplacementNamed(
+            Routes.mapRoute,
+          );
+        }
+        if (state is ErrorState) {
+          //Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.error,
+                style: const TextStyle(color: Colors.black),
+              ),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      },
+      child: Container(),
     );
   }
 }
