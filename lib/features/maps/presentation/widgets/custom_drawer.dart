@@ -83,8 +83,12 @@ class CustomDrawer extends StatelessWidget {
   }
 
   // ignore: unused_element
+  // ignore: todo
+  //TODO: This is deprecated method
   Future<void> _launchUrl(String url) async {
+    // ignore: deprecated_member_use
     await canLaunch(url)
+        // ignore: deprecated_member_use
         ? await launch(url)
         : throw "Couldn't launch$url";
   }
