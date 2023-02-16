@@ -13,10 +13,20 @@ void showProgressIndicator(BuildContext context) {
 
   showDialog(
     barrierColor: Colors.white.withOpacity(0.0),
-    barrierDismissible: false,
+    barrierDismissible: true,
     context: context,
     builder: (context) {
       return alertDialog;
     },
+  );
+}
+
+Widget divider() {
+  return const Divider(
+    // color: Colors.black,
+    indent: 18.0,
+    endIndent: 24.0,
+    height: 0,
+    thickness: 1,
   );
 }

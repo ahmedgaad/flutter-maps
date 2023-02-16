@@ -12,6 +12,7 @@ import '../cubit/phone_auth_states.dart';
 
 // ignore: must_be_immutable
 class OtpView extends StatelessWidget {
+  // ignore: prefer_typing_uninitialized_variables
   final  phoneNumber;
   late String otpCode;
   OtpView({super.key, required this.phoneNumber});
