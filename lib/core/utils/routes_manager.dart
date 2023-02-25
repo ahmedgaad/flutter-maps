@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maps/core/network/network_info.dart';
+import 'package:maps/features/maps/data/data_source/places_webservices.dart';
+import 'package:maps/features/maps/data/repository_impl/places_repo_impl.dart';
+import 'package:maps/features/maps/presentation/cubit/map_cubit.dart';
 import '../../features/maps/presentation/screens/map_screen.dart';
 import '../../features/phone_auth/presentation/cubit/phone_auth_cubit.dart';
 import '../../features/phone_auth/presentation/screens/otp_screen.dart';
@@ -35,11 +39,16 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => BlocProvider<PhoneAuthCubit>.value(
             value: phoneAuthCubit!,
-            child: OtpView(phoneNumber : phoneNumber),
+            child: OtpView(phoneNumber: phoneNumber),
           ),
         );
       case Routes.mapRoute:
-        return MaterialPageRoute(builder: (_) => const MapView());
+        return MaterialPageRoute(
+            builder: (_) => BlocProvider(
+                  create: (BuildContext context) =>
+                      MapCubit(PlacesRepository(PlacesWebservices())),
+                  child: const MapView(),
+                ));
       default:
         return unDefinedRoute();
     } //switch
